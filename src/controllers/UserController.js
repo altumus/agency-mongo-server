@@ -6,7 +6,7 @@ import { checkUserExistence } from '../utils/utils.js'
 export const login = async (req, res) => {
   try {
     const userEmail = req.body.email
-    const userPassword = md5(req.body.password)
+    const userPassword = md5(req.body.password).toString()
 
     const checkUser = await User.findOne({
       email: userEmail,
@@ -18,9 +18,30 @@ export const login = async (req, res) => {
       return
     }
 
-    res.status(200)
+    res.status(200).json(checkUser)
   } catch (error) {
-    console.log('error while login')
+    console.log('error while login', error)
+  }
+}
+
+export const authWithHash = async (req, res) => {
+  try {
+    const userEmail = req.body.email
+    const userPassword = req.body.hash
+
+    const checkUser = await User.findOne({
+      email: userEmail,
+      hash: userPassword,
+    })
+
+    if (!checkUser) {
+      res.status(500).json({ message: 'user not found' })
+      return
+    }
+
+    res.status(200).json(checkUser)
+  } catch (error) {
+    console.log('error while login', error)
   }
 }
 
@@ -33,7 +54,7 @@ export const createUserWithOrganization = async (req, res) => {
       return
     }
 
-    const userPassword = md5(req.body.password)
+    const userPassword = md5(req.body.password).toString()
 
     const userResponse = new User({
       email: req.body.email,
@@ -46,7 +67,7 @@ export const createUserWithOrganization = async (req, res) => {
 
     const newOrganization = new OrganizationsModel({
       organizationCreator: userResponse._id,
-      organizationInviteCode: md5(new Date().getTime().toString()),
+      organizationInviteCode: md5(new Date().getTime().toString()).toString(),
     })
 
     await newOrganization.save()
@@ -86,7 +107,7 @@ export const createUserWithInvite = async (req, res) => {
       return
     }
 
-    const userPassword = md5(req.body.password)
+    const userPassword = md5(req.body.password).toString()
 
     const userResponse = new User({
       email: req.body.email,
@@ -100,7 +121,7 @@ export const createUserWithInvite = async (req, res) => {
 
     const newOrganization = new OrganizationsModel({
       organizationCreator: userResponse._id,
-      organizationInviteCode: md5(new Date().getTime().toString()),
+      organizationInviteCode: md5(new Date().getTime().toString()).toString(),
     })
 
     await newOrganization.save()
@@ -119,6 +140,20 @@ export const createUserWithInvite = async (req, res) => {
     res.status(200).json(fullUser)
   } catch (error) {
     console.log('error while register user with org', error)
+  }
+}
+
+export const getUsersInOrganization = async (req, res) => {
+  try {
+    const organizationId = req.query.organizationId
+
+    const usersInOrganization = await User.find({
+      organizationId: organizationId,
+    })
+
+    res.status(200).json(usersInOrganization)
+  } catch (error) {
+    console.log('error while get users in organization')
   }
 }
 

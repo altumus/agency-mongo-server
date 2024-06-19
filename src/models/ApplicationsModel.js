@@ -20,6 +20,10 @@ const ApplicationSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    organizationId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Organizations',
+    },
   },
   {
     timestamps: true,

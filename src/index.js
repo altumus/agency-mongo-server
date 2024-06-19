@@ -3,6 +3,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
 import mongoose from 'mongoose'
+import * as ApplicationsController from '../src/controllers/ApplicationsController.js'
 import * as UserController from '../src/controllers/UserController.js'
 
 dotenv.config()
@@ -20,15 +21,33 @@ mongoose
 
 app.get('/', (req, res) => res.send('Server is up and running'))
 
-app.patch('/update-user', UserController.update)
-app.delete('/delete-user', UserController.remove)
-
+// логинация + регистрация
 app.post(
   '/register-with-organization',
   UserController.createUserWithOrganization,
 )
 app.post('/register-with-invite', UserController.createUserWithInvite)
 app.post('/login', UserController.login)
+app.post('/hash-auth', UserController.authWithHash)
+
+// работа с пользователями
+app.patch('/update-user', UserController.update)
+app.delete('/delete-user', UserController.remove)
+app.get('/users-in-organization', UserController.getUsersInOrganization)
+
+// работа с заявками
+app.get('/my-applications', ApplicationsController.getMyApplications)
+app.post('/create-application', ApplicationsController.createApplication)
+app.get(
+  '/get-employees-applications',
+  ApplicationsController.getEmployeesApplications,
+)
+app.get(
+  '/incoming-applications',
+  ApplicationsController.getIncomingApplications,
+)
+app.patch('/update-application', ApplicationsController.updateApplication)
+app.delete('/remove-application', ApplicationsController.removeApplication)
 
 const port = 3000
 app.listen(port, () => console.log(`Server is running on port ${port}`))
