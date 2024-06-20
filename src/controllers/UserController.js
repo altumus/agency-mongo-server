@@ -1,4 +1,5 @@
 import md5 from 'md5'
+import ApplicationsModel from '../models/ApplicationsModel.js'
 import OrganizationsModel from '../models/OrganizationsModel.js'
 import User from '../models/UserModel.js'
 import { checkUserExistence } from '../utils/utils.js'
@@ -21,6 +22,30 @@ export const login = async (req, res) => {
     res.status(200).json(checkUser)
   } catch (error) {
     console.log('error while login', error)
+  }
+}
+
+export const getOrganizationCreatorId = async (req, res) => {
+  try {
+    const organizationId = req.query.organizationId
+
+    const creatorId = await OrganizationsModel.findById(organizationId)
+
+    res.status(200).json({ creator: creatorId.organizationCreator })
+  } catch (error) {
+    console.log('error while get creator', erro)
+  }
+}
+
+export const getInviteCode = async (req, res) => {
+  try {
+    const organizationId = req.query.organizationId
+
+    const inviteCode = await OrganizationsModel.findById(organizationId)
+
+    res.status(200).json({ inviteCode: inviteCode.organizationInviteCode })
+  } catch (error) {
+    console.log('error while get invite code', error)
   }
 }
 
@@ -118,23 +143,6 @@ export const createUserWithInvite = async (req, res) => {
     })
 
     await userResponse.save()
-
-    const newOrganization = new OrganizationsModel({
-      organizationCreator: userResponse._id,
-      organizationInviteCode: md5(new Date().getTime().toString()).toString(),
-    })
-
-    await newOrganization.save()
-
-    await User.updateOne(
-      {
-        _id: userResponse._id,
-      },
-      {
-        organizationId: newOrganization._id,
-      },
-    )
-
     const fullUser = await User.findById(userResponse._id)
 
     res.status(200).json(fullUser)
@@ -159,31 +167,24 @@ export const getUsersInOrganization = async (req, res) => {
 
 export const remove = async (req, res) => {
   try {
-    const userId = req.params.id
+    const userId = req.body.id
 
-    User.findOneAndDelete(
+    console.log('user', userId)
+
+    await User.findOneAndDelete({
+      _id: userId,
+    })
+
+    const updatedTasks = await ApplicationsModel.updateMany(
       {
-        _id: userId,
+        responsibleUser: userId,
       },
-      (error, doc) => {
-        if (error) {
-          console.log('error when delete user')
-          return res.status(500).json({
-            message: 'Не удалось удалить сотрудника',
-          })
-        }
-
-        if (!doc) {
-          return res.status(404).json({
-            message: 'Сотрудник не найден',
-          })
-        }
-
-        res.json({
-          success: true,
-        })
+      {
+        responsibleUser: null,
       },
     )
+
+    res.status(200).json(updatedTasks)
   } catch (error) {
     console.log('error while update user', error)
   }
@@ -198,7 +199,6 @@ export const update = async (req, res) => {
         _id: userId,
       },
       {
-        avatar: req.body.avatar,
         email: req.body.email,
         hash: req.body.hash,
         name: req.body.name,

@@ -1,5 +1,4 @@
 import ApplicationsModel from '../models/ApplicationsModel.js'
-import UserModel from '../models/UserModel.js'
 
 export const getMyApplications = async (req, res) => {
   try {
@@ -23,24 +22,13 @@ export const getMyApplications = async (req, res) => {
 export const getEmployeesApplications = async (req, res) => {
   try {
     const organizationId = req.query.organizationId
-    const employeesInOrganization = await UserModel.find({
+
+    const applications = await ApplicationsModel.find({
       organizationId: organizationId,
+      responsibleUser: { $ne: null },
     })
 
-    const employeesTasks = []
-
-    for (let i = 0; i < employeesInOrganization.length; i++) {
-      const employeeTasks = await ApplicationsModel.find({
-        responsibleUser: employeesInOrganization[i]._id,
-      })
-
-      employeeTasks.push({
-        user: employeesInOrganization[i],
-        tasks: employeeTasks,
-      })
-    }
-
-    res.status(200).json(employeesTasks)
+    res.status(200).json(applications)
   } catch (error) {
     console.log('error while get employees applications')
   }
@@ -67,7 +55,7 @@ export const createApplication = async (req, res) => {
     const tasks = req.body.tasks
     const userOrganizationTitle = req.body.organizationTitle
 
-    const newApplication = await ApplicationsModel.create({
+    const newApplication = new ApplicationsModel({
       organizationId: organizationId,
       status: 0,
       tasks: tasks,
@@ -113,13 +101,12 @@ export const removeApplication = async (req, res) => {
   try {
     const applicationId = req.body.applicationId
 
-    const deletedApplication =
-      await ApplicationsModel.findByIdAndDelete(applicationId)
-
-    await deletedApplication.save()
+    const deletedApplication = await ApplicationsModel.findOneAndDelete({
+      _id: applicationId,
+    })
 
     res.status(200).json(deletedApplication)
   } catch (error) {
-    console.log('error while remove application')
+    console.log('error while remove application', error)
   }
 }

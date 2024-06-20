@@ -32,8 +32,10 @@ app.post('/hash-auth', UserController.authWithHash)
 
 // работа с пользователями
 app.patch('/update-user', UserController.update)
-app.delete('/delete-user', UserController.remove)
+app.post('/delete-user', UserController.remove)
 app.get('/users-in-organization', UserController.getUsersInOrganization)
+app.get('/get-invite-code', UserController.getInviteCode)
+app.get('/organization-creator-id', UserController.getOrganizationCreatorId)
 
 // работа с заявками
 app.get('/my-applications', ApplicationsController.getMyApplications)
@@ -47,7 +49,7 @@ app.get(
   ApplicationsController.getIncomingApplications,
 )
 app.patch('/update-application', ApplicationsController.updateApplication)
-app.delete('/remove-application', ApplicationsController.removeApplication)
+app.post('/remove-application', ApplicationsController.removeApplication)
 
 const port = 3000
 app.listen(port, () => console.log(`Server is running on port ${port}`))
